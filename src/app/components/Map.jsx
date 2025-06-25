@@ -1,24 +1,19 @@
 'use client'
-
 import { MapContainer, TileLayer, Marker, useMap, ZoomControl } from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import 'leaflet.markercluster';
+import { useState, useEffect } from "react";
 
-
-import { useEffect, useState } from "react";
-
-const MapComponent = ({ pontos, categoriaSelecionada, onSelectPonto, selectedCoords  }) => {
-
+const MapComponent = ({ pontos, categoriaSelecionada, onSelectPonto, selectedCoords }) => {
   const [scrollZoom, setScrollZoom] = useState(true);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const isMobile = window.innerWidth < 768;
-      setScrollZoom(!isMobile);  // ✅ Ativa scrollZoom só no desktop
+      setScrollZoom(!isMobile);
     }
   }, []);
-
 
   useEffect(() => {
     delete L.Icon.Default.prototype._getIconUrl;
@@ -29,31 +24,27 @@ const MapComponent = ({ pontos, categoriaSelecionada, onSelectPonto, selectedCoo
     });
   }, []);
 
-
   function MapFlyTo({ coords }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (coords) {
-      map.flyTo(coords, 12, { duration: 1.5 });
-    }
-  }, [coords]);
-
-  return null;
+    const map = useMap();
+    useEffect(() => {
+      if (coords) {
+        map.flyTo(coords, 14, { duration: 1.5 });
+      }
+    }, [coords]);
+    return null;
   }
-
 
   function MarkerCluster({ pontos }) {
     const map = useMap();
-
     useEffect(() => {
       const markers = L.markerClusterGroup();
-      const filtered = categoriaSelecionada === 'all' ? pontos : pontos.filter(p => p.categoria === categoriaSelecionada);
+      const filtered = categoriaSelecionada === 'all' 
+        ? pontos 
+        : pontos.filter(p => p.categoria === categoriaSelecionada);
 
       filtered.forEach(ponto => {
         const marker = L.marker(ponto.coords);
         marker.on('click', () => {
-          map.setView(ponto.coords, 12, { animate: true });
           onSelectPonto(ponto);
         });
         markers.addLayer(marker);
@@ -63,13 +54,8 @@ const MapComponent = ({ pontos, categoriaSelecionada, onSelectPonto, selectedCoo
 
       if (filtered.length > 0) {
         const bounds = L.latLngBounds(filtered.map(p => p.coords));
-        map.flyToBounds(bounds, {
-          padding: [100, 100],
-          duration: 1.5,
-          animate: true,
-        });
+        map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
       }
-
 
       return () => map.removeLayer(markers);
     }, [pontos, categoriaSelecionada]);
@@ -85,10 +71,13 @@ const MapComponent = ({ pontos, categoriaSelecionada, onSelectPonto, selectedCoo
       zoomControl={false}
       scrollWheelZoom={scrollZoom}
     >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <ZoomControl position="bottomright" />
-        <MarkerCluster pontos={pontos} />
-        <MapFlyTo coords={selectedCoords} />
+      <TileLayer 
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      />
+      <ZoomControl position="bottomright" />
+      <MarkerCluster pontos={pontos} />
+      <MapFlyTo coords={selectedCoords} />
     </MapContainer>
   );
 };
